@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     APP_SECRET_KEY: str = "change-me-in-production-32-chars-min"
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000
+    PORT: int | None = None
     LOG_LEVEL: str = "INFO"
     FRONTEND_URL: str = "http://localhost:8000"
     ADMIN_EMAILS: str | list[str] = ["omichandra536@gmail.com"]
@@ -103,6 +104,9 @@ class Settings(BaseSettings):
             self.MONGODB_URL = self.MONGODB_URI
         elif self.MONGODB_URL and not self.MONGODB_URI:
             self.MONGODB_URI = self.MONGODB_URL
+
+        if self.PORT is not None:
+            self.APP_PORT = self.PORT
 
         if self.LANGCHAIN_TRACING_V2 and self.LANGCHAIN_API_KEY:
             os.environ["LANGCHAIN_TRACING_V2"] = "true"
