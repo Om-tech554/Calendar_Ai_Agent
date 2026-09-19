@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Control Center — Calendar Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+  <!-- Admin Access Denied Screen (hidden by default) -->
+  <div id="denied-screen" class="denied-container hidden">
+    <div class="denied-card">
+      <div class="denied-icon">🔒</div>
+      <h2>Admin Access Restricted</h2>
+      <p id="denied-reason">This portal is reserved for system administrators. Please sign in with an authorized admin account.</p>
+      <div class="denied-actions">
+        <a href="/" class="btn-primary">Return to Chat</a>
+        <a href="/auth/login" class="btn-secondary">Switch Account</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard Layout -->
+  <div id="admin-app" class="admin-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">📅</div>
+        <div class="brand-text">
+          <span class="brand-title">Calendar AI</span>
+          <span class="brand-subtitle">Control Center</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <button class="nav-item active" data-tab="tab-overview" id="nav-overview">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Overview & Quotas</span>
+        </button>
+        <button class="nav-item" data-tab="tab-users" id="nav-users">
+          <span class="nav-icon">👥</span>
+          <span class="nav-label">User Directory</span>
+          <span class="nav-badge" id="badge-total-users">0</span>
+        </button>
+        <button class="nav-item" data-tab="tab-activity" id="nav-activity">
+          <span class="nav-icon">⚡</span>
+          <span class="nav-label">Live Activity</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/" class="back-link">
+          <span class="back-icon">←</span>
+          <span>Back to Chat</span>
+        </a>
+        <div class="admin-profile" id="admin-profile-pill">
+          <img src="" alt="Avatar" id="admin-avatar" class="admin-avatar">
+          <div class="admin-details">
+            <span class="admin-name" id="admin-name">Admin</span>
+            <span class="admin-role">Superuser</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+      <!-- Top Bar -->
+      <header class="admin-header">
+        <div class="header-left">
+          <h1 class="page-title" id="page-title">Operational Overview</h1>
+          <div class="live-indicator">
+            <span class="pulse-dot"></span>
+            <span class="live-text">Live Monitoring Active</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="refresh-control">
+            <button id="btn-refresh" class="btn-icon" title="Refresh Now">
+              <span class="refresh-icon">🔄</span>
+            </button>
+            <span class="refresh-label" id="last-updated-text">Updating...</span>
+          </div>
+          <div class="env-badge" id="env-badge">Production</div>
+        </div>
+      </header>
+
+      <!-- TAB 1: OVERVIEW & QUOTAS -->
+      <section id="tab-overview" class="tab-pane active">
+        <!-- KPI Metrics Grid -->
+        <div class="kpi-grid">
+          <!-- Total Users Card -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-title">Total Users</span>
+              <span class="kpi-icon icon-purple">👥</span>
+            </div>
+            <div class="kpi-value" id="kpi-total-users">-</div>
+            <div class="kpi-subtext">
+              <span class="stat-pill success" id="kpi-active-today">- active today</span>
+              <span class="stat-pill secondary" id="kpi-active-7d">- this week</span>
+            </div>
+          </div>
+
+          <!-- Total Conversations -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-title">Conversations</span>
+              <span class="kpi-icon icon-blue">💬</span>
+            </div>
+            <div class="kpi-value" id="kpi-total-messages">-</div>
+            <div class="kpi-subtext">
+              <span class="text-dim" id="kpi-total-sessions">- total sessions started</span>
+            </div>
+          </div>
+
+          <!-- Gemini Free Tier Quota Card -->
+          <div class="kpi-card card-highlight">
+            <div class="kpi-header">
+              <span class="kpi-title">Gemini Free Tier (RPD)</span>
+              <span class="kpi-icon icon-amber">⚡</span>
+            </div>
+            <div class="kpi-value-row">
+              <div class="kpi-value" id="kpi-gemini-used">-</div>
+              <span class="kpi-limit" id="kpi-gemini-limit">/ 1,500 daily</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="gemini-progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="kpi-subtext space-between">
+              <span id="gemini-remaining-text">- requests left today</span>
+              <span class="countdown-badge" id="reset-countdown">Resets in --:--</span>
+            </div>
+          </div>
+
+          <!-- Calendar Operations Card -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-title">Calendar Queries Today</span>
+              <span class="kpi-icon icon-green">📅</span>
+            </div>
+            <div class="kpi-value" id="kpi-calendar-queries">-</div>
+            <div class="kpi-subtext">
+              <span class="text-dim">Limit: 1,000,000 / day</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quota Health & Free Tier Forecast Section -->
+        <div class="section-title-row">
+          <h2>API Quota & Free Tier Health Monitor</h2>
+          <span class="section-subtitle">Real-time tracking of external provider rate limits & free quotas</span>
+        </div>
+
+        <div class="quota-cards-grid" id="quota-cards-grid">
+          <!-- Loaded dynamically by admin.js -->
+        </div>
+
+        <!-- Database Storage Breakdown -->
+        <div class="section-title-row mt-4">
+          <h2>Database Storage (MongoDB Atlas)</h2>
+          <span class="section-subtitle">Document counts in cluster: <strong id="cluster-db-name">calender_agent</strong></span>
+        </div>
+
+        <div class="db-counts-grid" id="db-counts-grid">
+          <!-- Loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- TAB 2: USER DIRECTORY -->
+      <section id="tab-users" class="tab-pane">
+        <div class="table-container">
+          <div class="table-toolbar">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="user-search-input" placeholder="Search by name or email...">
+            </div>
+            <div class="table-stats">
+              Showing <span id="user-count-display">0</span> registered users
+            </div>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th>Last Active</th>
+                <th>Sessions</th>
+                <th>Messages</th>
+                <th>Google Calendar</th>
+                <th>Role Control</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <tr>
+                <td colspan="9" class="loading-td">Loading users...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 3: LIVE ACTIVITY STREAM -->
+      <section id="tab-activity" class="tab-pane">
+        <div class="activity-container">
+          <div class="activity-header">
+            <h3>Recent Interaction Timeline</h3>
+            <span class="text-dim">Latest user messages and agent responses</span>
+          </div>
+          <div class="timeline" id="activity-timeline">
+            <div class="loading-td">Loading live activity...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ── Custom Confirmation Modal ────────────────────────────────────── -->
+  <div id="confirm-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-icon" id="modal-icon">🛡️</div>
+      <h3 class="modal-title" id="modal-title">Confirm Action</h3>
+      <p class="modal-body" id="modal-body">Are you sure you want to proceed?</p>
+      <div class="modal-actions">
+        <button class="modal-btn btn-cancel" id="modal-cancel-btn">Cancel</button>
+        <button class="modal-btn btn-primary" id="modal-confirm-btn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toast Notifications Container ────────────────────────────────── -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="/static/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+# Render deployment configuration
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: calender-agent
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_PORT
+        value: 8000
+      - key: LOG_LEVEL
+        value: INFO
+      # Add remaining secrets in Render dashboard → Environment
+      # Required: GOOGLE_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+      #           MONGODB_URL, APP_SECRET_KEY, ENCRYPTION_KEY,
+      #           LANGCHAIN_API_KEY, GOOGLE_REDIRECT_URI
