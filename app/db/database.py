@@ -43,12 +43,22 @@ async def connect_db() -> None:
 
     logger.info("db_connecting", url=settings.MONGODB_URL[:30] + "...")
 
+    client_kwargs: dict = {
+        "serverSelectionTimeoutMS": 5000,
+        "connectTimeoutMS": 5000,
+        "maxPoolSize": 10,
+        "minPoolSize": 1,
+    }
+    if "mongodb+srv" in settings.MONGODB_URL or "tls=true" in settings.MONGODB_URL.lower() or "ssl=true" in settings.MONGODB_URL.lower():
+        try:
+            import certifi
+            client_kwargs["tlsCAFile"] = certifi.where()
+        except ImportError:
+            pass
+
     _client = AsyncIOMotorClient(
         settings.MONGODB_URL,
-        serverSelectionTimeoutMS=5000,
-        connectTimeoutMS=5000,
-        maxPoolSize=10,
-        minPoolSize=1,
+        **client_kwargs,
     )
 
     # Initialize Beanie with all document models
