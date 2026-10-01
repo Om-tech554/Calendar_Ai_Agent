@@ -184,6 +184,11 @@ async function loadSession(sessionId, title) {
   const clearBtn = document.getElementById('clear-chat-btn');
   if (clearBtn) clearBtn.classList.remove('hidden');
 
+  // Auto-close sidebar drawer on mobile
+  if (window.innerWidth <= 768) {
+    toggleSidebar(false);
+  }
+
   // Clear messages
   const container = document.getElementById('messages-container');
   container.innerHTML = '';
@@ -208,6 +213,11 @@ function startNewChat() {
 
   const clearBtn = document.getElementById('clear-chat-btn');
   if (clearBtn) clearBtn.classList.add('hidden');
+
+  // Auto-close sidebar drawer on mobile
+  if (window.innerWidth <= 768) {
+    toggleSidebar(false);
+  }
 
   const container = document.getElementById('messages-container');
   container.innerHTML = '';
@@ -547,11 +557,35 @@ function autoResize(el) {
   el.style.height = Math.min(el.scrollHeight, 160) + 'px';
 }
 
-function toggleSidebar() {
+function toggleSidebar(forceOpen) {
   const sidebar = document.getElementById('sidebar');
-  sidebar.classList.toggle('collapsed');
-  state.sidebarOpen = !sidebar.classList.contains('collapsed');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (!sidebar) return;
+
+  const isOpen = !sidebar.classList.contains('collapsed');
+  const targetOpen = forceOpen !== undefined ? forceOpen : !isOpen;
+
+  if (targetOpen) {
+    sidebar.classList.remove('collapsed');
+    if (overlay && window.innerWidth <= 768) {
+      overlay.classList.remove('hidden');
+    }
+  } else {
+    sidebar.classList.add('collapsed');
+    if (overlay) {
+      overlay.classList.add('hidden');
+    }
+  }
+  state.sidebarOpen = targetOpen;
 }
+
+// Window resize listener to handle responsive drawer state
+window.addEventListener('resize', () => {
+  const overlay = document.getElementById('sidebar-overlay');
+  if (window.innerWidth > 768 && overlay) {
+    overlay.classList.add('hidden');
+  }
+});
 
 // ── Markdown Renderer (lightweight) ───────────────────────────────────────
 function renderMarkdown(text) {
@@ -603,6 +637,9 @@ async function init() {
     state.user = user;
     renderUserInfo();
     showApp();
+    if (window.innerWidth <= 768) {
+      toggleSidebar(false);
+    }
     loadSessions();
   } catch (_) {
     clearAuth();

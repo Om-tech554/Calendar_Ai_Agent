@@ -34,11 +34,17 @@
 
 html, body {
   height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
   font-family: var(--font);
   background: var(--bg-base);
   color: var(--text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+  overflow: hidden;
 }
 
 /* ── Scrollbar ──────────────────────────────────────────────────────────── */
@@ -158,11 +164,30 @@ html, body {
   line-height: 1.5;
 }
 
+/* ── Mobile Sidebar Overlay ────────────────────────────────────────────── */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 998;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+  animation: fadeIn 0.2s ease;
+}
+.sidebar-overlay.hidden {
+  display: none !important;
+}
+
 /* ── App Layout ─────────────────────────────────────────────────────────── */
 .app {
   display: flex;
-  height: 100vh;
+  height: 100%;
+  height: 100dvh;
+  width: 100vw;
   overflow: hidden;
+  position: relative;
 }
 
 /* ── Sidebar ────────────────────────────────────────────────────────────── */
@@ -175,6 +200,7 @@ html, body {
   flex-direction: column;
   transition: transform var(--transition), width var(--transition);
   overflow: hidden;
+  z-index: 10;
 }
 
 .sidebar.collapsed {
@@ -184,12 +210,40 @@ html, body {
 }
 
 .sidebar-header {
-  padding: 1.25rem 1rem;
+  padding: 1.15rem 1rem;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.5rem;
+}
+
+.sidebar-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sidebar-close-btn {
+  display: none;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  -webkit-tap-highlight-color: transparent;
+}
+.sidebar-close-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border-color: var(--border-active);
+}
+.sidebar-close-btn:active {
+  transform: scale(0.92);
 }
 
 .logo {
@@ -552,14 +606,6 @@ html, body {
 @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
 @keyframes messageIn { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-/* ── Responsive ─────────────────────────────────────────────────────────── */
-@media (max-width: 640px) {
-  .sidebar { position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; }
-  .sidebar.collapsed { transform: translateX(-100%); }
-  .login-card { padding: 2rem 1.5rem; }
-  .messages-container { padding: 1rem; }
-  .input-area { padding: 0.75rem 1rem 1rem; }
-}
 
 /* ── Admin Link Button ──────────────────────────────────────────────────── */
 .admin-link-btn {
@@ -864,4 +910,374 @@ html, body {
 .modal-btn.btn-primary:hover {
   background: var(--accent-light);
   box-shadow: 0 0 15px var(--accent-glow);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ── COMPREHENSIVE RESPONSIVE DESIGN SYSTEM (ALL MOBILE BRANDS & TABLETS) ───
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet & Mobile Screens (<= 768px: iPad Mini, Surface, Large Phones) ── */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-w: 290px;
+  }
+
+  /* Off-canvas sliding drawer */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(310px, 86vw);
+    min-width: unset;
+    z-index: 1000;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.85), 0 0 25px rgba(114, 90, 255, 0.15);
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+    width: min(310px, 86vw);
+    min-width: unset;
+  }
+
+  .sidebar-close-btn {
+    display: flex;
+  }
+
+  .chat-area {
+    width: 100vw;
+    min-width: 100vw;
+  }
+
+  /* Header mobile optimization with safe-area insets */
+  .chat-header {
+    padding: 0.75rem 1rem;
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+    gap: 0.75rem;
+  }
+
+  .sidebar-toggle {
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+
+  .header-title {
+    font-size: 0.95rem;
+  }
+
+  .header-status {
+    font-size: 0.72rem;
+  }
+
+  /* Messages area */
+  .messages-container {
+    padding: 1rem 0.85rem;
+    gap: 1.15rem;
+  }
+
+  .message {
+    max-width: 100%;
+    gap: 0.6rem;
+  }
+
+  .message-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+  }
+
+  .message-bubble {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+    max-width: calc(100% - 40px);
+    border-radius: var(--radius-md);
+  }
+
+  .message.user .message-bubble {
+    border-bottom-right-radius: 4px;
+  }
+
+  .message.assistant .message-bubble {
+    border-bottom-left-radius: 4px;
+  }
+
+  /* Reveal action buttons on touch without relying on hover */
+  .msg-delete-btn {
+    opacity: 0.7;
+    width: 28px;
+    height: 28px;
+  }
+
+  .session-delete-btn {
+    opacity: 0.7;
+    padding: 6px;
+  }
+
+  /* Quick Actions grid on tablets and phones */
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .quick-btn {
+    padding: 0.75rem 0.9rem;
+    font-size: 0.82rem;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-md);
+  }
+  .quick-btn:active {
+    transform: scale(0.97);
+    background: var(--accent-glow);
+  }
+
+  /* Input area with safe-area bottom for iOS home bar and gesture navigation */
+  .input-area {
+    padding: 0.65rem 0.85rem;
+    padding-bottom: max(0.85rem, env(safe-area-inset-bottom));
+  }
+
+  .input-wrapper {
+    padding: 0.55rem 0.6rem 0.55rem 0.95rem;
+    gap: 0.5rem;
+    border-radius: var(--radius-md);
+  }
+
+  /* CRITICAL: 16px font-size prevents iOS Safari from forcibly zooming in */
+  .message-input {
+    font-size: 16px;
+    line-height: 1.45;
+  }
+
+  .send-btn {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    border-radius: var(--radius-sm);
+  }
+  .send-btn:active {
+    transform: scale(0.92);
+  }
+
+  /* Toast notification on mobile */
+  .toast-container {
+    top: max(0.75rem, env(safe-area-inset-top));
+    left: 0.85rem;
+    right: 0.85rem;
+  }
+
+  .toast {
+    min-width: unset;
+    width: 100%;
+    max-width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* ── Standard Mobile Screens (<= 480px: iPhone 12/13/14/15, Samsung Galaxy S21-S24, Pixel) ── */
+@media (max-width: 480px) {
+  /* Header compact mode */
+  .chat-header {
+    padding: 0.65rem 0.75rem;
+    padding-top: max(0.65rem, env(safe-area-inset-top));
+    gap: 0.5rem;
+  }
+
+  .header-title {
+    max-width: 130px;
+    font-size: 0.9rem;
+  }
+
+  .header-status {
+    font-size: 0.68rem;
+  }
+
+  .header-actions {
+    gap: 0.35rem;
+  }
+
+  /* Hide verbose text labels in header buttons on phones to prevent crowding */
+  .clear-chat-btn {
+    padding: 0.45rem 0.6rem;
+  }
+  .clear-chat-btn span {
+    display: none;
+  }
+
+  .admin-link-btn {
+    padding: 0.45rem 0.65rem;
+  }
+  .admin-link-btn span:last-child {
+    display: none;
+  }
+
+  /* Welcome Screen for phones */
+  .welcome-state {
+    gap: 0.75rem;
+  }
+
+  .welcome-icon {
+    font-size: 3rem;
+  }
+
+  .welcome-title {
+    font-size: 1.35rem;
+    line-height: 1.3;
+  }
+
+  .welcome-sub {
+    font-size: 0.88rem;
+  }
+
+  /* Quick action buttons stack into full-width touch cards */
+  .quick-actions {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .quick-btn {
+    padding: 0.8rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  /* Message bubbles */
+  .messages-container {
+    padding: 0.85rem 0.65rem;
+  }
+
+  .message-bubble {
+    font-size: 0.88rem;
+    padding: 0.75rem 0.9rem;
+    line-height: 1.55;
+  }
+
+  /* Preformatted code blocks and tables stay responsive without page blowout */
+  .message-bubble pre,
+  .message-bubble table {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Login card on compact mobile */
+  .login-overlay {
+    padding: 1rem 0.75rem;
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .login-card {
+    padding: 2rem 1.25rem;
+    width: 100%;
+    border-radius: var(--radius-lg);
+  }
+
+  .logo-icon {
+    font-size: 2.75rem;
+  }
+
+  .login-title {
+    font-size: 2rem;
+  }
+
+  .login-subtitle {
+    font-size: 0.88rem;
+  }
+
+  .feature-list {
+    margin: 1.25rem 0;
+    gap: 0.75rem;
+  }
+
+  .feature-list li {
+    font-size: 0.85rem;
+    gap: 0.6rem;
+  }
+
+  .login-btn {
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .modal-card {
+    padding: 1.5rem 1.15rem;
+    width: 94%;
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+  }
+
+  .modal-body {
+    font-size: 0.85rem;
+  }
+}
+
+/* ── Ultra-Compact Screens (<= 360px: Galaxy Fold Cover, iPhone SE 1st gen) ── */
+@media (max-width: 360px) {
+  .header-title {
+    max-width: 95px;
+    font-size: 0.85rem;
+  }
+
+  .sidebar {
+    width: 88vw;
+  }
+
+  .sidebar.collapsed {
+    width: 88vw;
+  }
+
+  .login-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .login-title {
+    font-size: 1.75rem;
+  }
+
+  .feature-list li span {
+    font-size: 1rem;
+  }
+}
+
+/* ── Landscape Phone Orientation (Short Viewport Height) ── */
+@media (max-height: 520px) and (orientation: landscape) {
+  .welcome-icon {
+    display: none;
+  }
+  .welcome-title {
+    font-size: 1.2rem;
+  }
+  .welcome-state {
+    gap: 0.5rem;
+  }
+  .quick-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .chat-header {
+    padding: 0.5rem 1rem;
+    min-height: 48px;
+  }
+  .messages-container {
+    padding: 0.65rem 1rem;
+  }
+  .login-card {
+    padding: 1.25rem 1.5rem;
+  }
+  .feature-list {
+    display: none;
+  }
 }
