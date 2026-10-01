@@ -13,7 +13,10 @@ import asyncio
 from datetime import datetime, timezone
 
 from googleapiclient.discovery import Resource
-from langchain_classic.agents import AgentExecutor, create_tool_calling_agent
+try:
+    from langchain.agents import AgentExecutor, create_tool_calling_agent
+except ImportError:
+    from langchain_classic.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.messages import BaseMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -27,17 +30,22 @@ from app.tools.calendar_tools import build_calendar_tools
 logger = get_logger(__name__)
 
 # Agent timeout in seconds
-AGENT_TIMEOUT = 60
+AGENT_TIMEOUT = 90
 
 
 def _build_llm() -> ChatGoogleGenerativeAI:
-    """Build the Gemini LLM instance."""
+    """Build the Gemini LLM instance with fail-safe configuration."""
+    model_name = settings.LLM_MODEL
+    if not model_name or model_name in ("gemini-flash-latest", "gemini-flash"):
+        model_name = "gemini-1.5-flash"
+
     return ChatGoogleGenerativeAI(
-        model=settings.LLM_MODEL,
+        model=model_name,
         google_api_key=settings.GOOGLE_API_KEY,
         temperature=settings.LLM_TEMPERATURE,
         max_tokens=settings.LLM_MAX_TOKENS,
-        convert_system_message_to_human=True,  # Gemini quirk
+        timeout=35,
+        max_retries=2,
     )
 
 

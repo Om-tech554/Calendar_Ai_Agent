@@ -9,6 +9,7 @@ Handles:
 - Storing/loading encrypted tokens in MongoDB
 """
 
+import asyncio
 import urllib.parse
 from datetime import datetime, timezone
 
@@ -160,7 +161,7 @@ async def get_calendar_service(user_id: str) -> Resource:
     # Refresh if expired
     if credentials.expired and credentials.refresh_token:
         logger.info("oauth_token_refreshing", user_id=user_id)
-        credentials.refresh(GoogleRequest())
+        await asyncio.to_thread(credentials.refresh, GoogleRequest())
 
         # Save refreshed tokens
         await save_oauth_tokens(user_id, {
@@ -170,7 +171,7 @@ async def get_calendar_service(user_id: str) -> Resource:
             "scope": " ".join(settings.GOOGLE_OAUTH_SCOPES),
         })
 
-    return build("calendar", "v3", credentials=credentials, cache_discovery=False)
+    return await asyncio.to_thread(build, "calendar", "v3", credentials=credentials, cache_discovery=False)
 
 
 async def get_user_by_id(user_id: str) -> User:

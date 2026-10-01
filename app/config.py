@@ -34,7 +34,7 @@ class Settings(BaseSettings):
 
     # ── LLM ──────────────────────────────────────────────────────────────────
     GOOGLE_API_KEY: str = ""
-    LLM_MODEL: str = "gemini-flash-latest"
+    LLM_MODEL: str = "gemini-1.5-flash"
     LLM_TEMPERATURE: float = 0.1
     LLM_MAX_TOKENS: int = 4096
 
@@ -96,6 +96,13 @@ class Settings(BaseSettings):
         if v.upper() not in valid:
             raise ValueError(f"LOG_LEVEL must be one of {valid}")
         return v.upper()
+
+    @field_validator("LLM_MODEL")
+    @classmethod
+    def validate_llm_model(cls, v: str) -> str:
+        if not v or v in ("gemini-flash-latest", "gemini-flash", "gemini-1.5-flash-latest"):
+            return "gemini-1.5-flash"
+        return v
 
     @model_validator(mode="after")
     def sync_settings(self) -> "Settings":

@@ -7,6 +7,7 @@ Google Calendar API service with production-grade features:
 - Timezone-aware datetime handling
 """
 
+import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -95,7 +96,7 @@ async def list_events(
         if query:
             params["q"] = query
 
-        result = service.events().list(**params).execute()
+        result = await asyncio.to_thread(service.events().list(**params).execute)
         events = result.get("items", [])
         logger.info("events_listed", count=len(events))
         return events
@@ -142,11 +143,13 @@ async def create_event(
         raise EventConflictError(conflicts[0].get("summary", "Unknown event"))
 
     try:
-        created = service.events().insert(
-            calendarId="primary",
-            body=event_body,
-            sendUpdates="all" if attendees else "none",
-        ).execute()
+        created = await asyncio.to_thread(
+            service.events().insert(
+                calendarId="primary",
+                body=event_body,
+                sendUpdates="all" if attendees else "none",
+            ).execute
+        )
         logger.info("event_created", event_id=created["id"], title=title)
         return created
     except HttpError as exc:
@@ -167,7 +170,9 @@ async def update_event(
 ) -> dict[str, Any]:
     """Patch an existing calendar event (only provided fields are updated)."""
     try:
-        event = service.events().get(calendarId="primary", eventId=event_id).execute()
+        event = await asyncio.to_thread(
+            service.events().get(calendarId="primary", eventId=event_id).execute
+        )
     except HttpError as exc:
         raise _map_http_error(exc, event_id) from exc
 
@@ -183,9 +188,11 @@ async def update_event(
         event["end"] = {"dateTime": end_datetime, "timeZone": timezone_name}
 
     try:
-        updated = service.events().update(
-            calendarId="primary", eventId=event_id, body=event
-        ).execute()
+        updated = await asyncio.to_thread(
+            service.events().update(
+                calendarId="primary", eventId=event_id, body=event
+            ).execute
+        )
         logger.info("event_updated", event_id=event_id)
         return updated
     except HttpError as exc:
@@ -197,7 +204,9 @@ async def update_event(
 async def delete_event(service: Resource, event_id: str) -> str:
     """Delete a calendar event by ID."""
     try:
-        service.events().delete(calendarId="primary", eventId=event_id).execute()
+        await asyncio.to_thread(
+            service.events().delete(calendarId="primary", eventId=event_id).execute
+        )
         logger.info("event_deleted", event_id=event_id)
         return f"Event {event_id} has been deleted."
     except HttpError as exc:
@@ -222,13 +231,15 @@ async def find_free_slots(
 
     # Fetch all events that day
     try:
-        result = service.events().list(
-            calendarId="primary",
-            timeMin=day_start.isoformat(),
-            timeMax=day_end.isoformat(),
-            singleEvents=True,
-            orderBy="startTime",
-        ).execute()
+        result = await asyncio.to_thread(
+            service.events().list(
+                calendarId="primary",
+                timeMin=day_start.isoformat(),
+                timeMax=day_end.isoformat(),
+                singleEvents=True,
+                orderBy="startTime",
+            ).execute
+        )
     except HttpError as exc:
         raise _map_http_error(exc) from exc
 
@@ -274,12 +285,14 @@ async def _check_conflicts(
 ) -> list[dict]:
     """Check if any existing events overlap with the given time range."""
     try:
-        result = service.events().list(
-            calendarId="primary",
-            timeMin=start,
-            timeMax=end,
-            singleEvents=True,
-        ).execute()
+        result = await asyncio.to_thread(
+            service.events().list(
+                calendarId="primary",
+                timeMin=start,
+                timeMax=end,
+                singleEvents=True,
+            ).execute
+        )
         return result.get("items", [])
     except HttpError:
         return []  # Non-fatal; allow event creation if check fails
