@@ -36,8 +36,8 @@ AGENT_TIMEOUT = 90
 def _build_llm() -> ChatGoogleGenerativeAI:
     """Build the Gemini LLM instance with fail-safe configuration."""
     model_name = settings.LLM_MODEL
-    if not model_name or model_name in ("gemini-flash-latest", "gemini-flash"):
-        model_name = "gemini-1.5-flash"
+    if not model_name or model_name in ("gemini-1.5-flash", "gemini-flash"):
+        model_name = "gemini-flash-latest"
 
     return ChatGoogleGenerativeAI(
         model=model_name,
