@@ -40,10 +40,13 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-# ── Docker ────────────────────────────────────────────────────────────────────
-.dockerignore
 
 # ── Misc ──────────────────────────────────────────────────────────────────────
 *.bak
 *.tmp
 calender_agent.db
+node_modules/
+package.json
+package-lock.json
+
+

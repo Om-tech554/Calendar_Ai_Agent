@@ -9,42 +9,40 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY pyproject.toml .
+# Install Python production dependencies to an isolated prefix
+COPY requirements.txt .
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir hatchling && \
-    pip install --no-cache-dir -e ".[dev]" 2>/dev/null || \
-    pip install --no-cache-dir -e .
+    pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # ── Stage 2: Runtime ───────────────────────────────────────────────────────────
 FROM python:3.11-slim AS runtime
 
 WORKDIR /app
 
-# Install ca-certificates and create non-root user
+# Install ca-certificates and create non-root user for security
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    curl \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r appuser && useradd -r -g appuser appuser
 
-# Copy installed packages from builder
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Copy installed dependencies from builder
+COPY --from=builder /install /usr/local
 
 # Copy application code
 COPY app/ ./app/
 COPY pyproject.toml .
 
-# Set ownership
+# Set non-root permissions
 RUN chown -R appuser:appuser /app
 USER appuser
 
-# Expose port
+# Expose port (Railway injects $PORT dynamically)
 EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD python -c "import os, httpx; p=os.environ.get('PORT', '8000'); httpx.get(f'http://localhost:{p}/health').raise_for_status()"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD python -c "import os, urllib.request; p = os.environ.get('PORT', '8000'); urllib.request.urlopen(f'http://127.0.0.1:{p}/health').read()"
 
-# Start server
+# Start FastAPI server
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     # ── MongoDB ───────────────────────────────────────────────────────────────
     MONGODB_URL: str = "mongodb://localhost:27017"
     MONGODB_URI: str = ""
+    MONGO_URL: str = ""
     MONGODB_USERNAME: str = ""
     MONGODB_PASSWORD: str = ""
     MONGODB_DB_NAME: str = "calender_agent"
@@ -67,6 +68,7 @@ class Settings(BaseSettings):
 
     # ── Token Encryption ─────────────────────────────────────────────────────
     ENCRYPTION_KEY: str = ""
+    FERNET_KEY: str = ""
 
     # ── JWT ───────────────────────────────────────────────────────────────────
     JWT_ALGORITHM: str = "HS256"
@@ -96,14 +98,20 @@ class Settings(BaseSettings):
         return v.upper()
 
     @model_validator(mode="after")
-    def sync_mongodb_settings(self) -> "Settings":
-        """Ensure MONGODB_URL and MONGODB_URI are synchronized and propagate LangSmith settings."""
+    def sync_settings(self) -> "Settings":
+        """Synchronize environment variables aliases (MongoDB, Encryption, LangSmith)."""
         import os
-        # If MONGODB_URI is provided and MONGODB_URL is default/empty, use MONGODB_URI
-        if self.MONGODB_URI and (not self.MONGODB_URL or self.MONGODB_URL == "mongodb://localhost:27017"):
-            self.MONGODB_URL = self.MONGODB_URI
-        elif self.MONGODB_URL and not self.MONGODB_URI:
-            self.MONGODB_URI = self.MONGODB_URL
+        # Sync MongoDB URL aliases (Railway provisions MONGO_URL)
+        mongo_source = self.MONGO_URL or self.MONGODB_URI or self.MONGODB_URL
+        if mongo_source and mongo_source != "mongodb://localhost:27017":
+            self.MONGODB_URL = mongo_source
+            self.MONGODB_URI = mongo_source
+
+        # Sync Fernet / Encryption Key aliases
+        if not self.ENCRYPTION_KEY and self.FERNET_KEY:
+            self.ENCRYPTION_KEY = self.FERNET_KEY
+        elif not self.FERNET_KEY and self.ENCRYPTION_KEY:
+            self.FERNET_KEY = self.ENCRYPTION_KEY
 
         if self.PORT is not None:
             self.APP_PORT = self.PORT
